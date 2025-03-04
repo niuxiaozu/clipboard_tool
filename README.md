@@ -33,8 +33,8 @@
 
 ### 使用预编译版本
 
-1. 从 Releases 页面下载最新版本的 `clipboard_tool.exe`
-2. 双击运行即可
+1. 从 Releases 页面下载最新版本的 `clipboard_tool.zip`
+2. 解压到任意目录，双击clipboard_tool文件夹运行其中的clipboard_tool.exe即可。（整个clipboard_tool都有用，剪切板历史记录也会保存在clipboard_tool.exe同级目录。）
 
 ### 从源码调试运行
 
@@ -63,7 +63,7 @@ pip install -r requirements.txt
 py build.py
 ```
 
-3. dist\clipboard_tool.exe 即为打包好的可执行文件。
+3. dist\clipboard_tool 即为打包好的可执行文件包，文件夹内都有用，将clipboard_tool文件夹复制到任意目录双击内部的clipboard_tool.exe即可。
 
 ### 扯两句
 靠AI帮忙搞的，比较省脑子，我的python就只有阅读、调整代码的水平，跟大模型反复拉扯，用到了Deepseek、Claude等模型，十几个小时就搞的差不多可用了。但放心，没什么垃圾代码，代码全部经过了我的审查。名称前缀"NIUXZ_"只是代码中内防止与其他程序冲突用的标识。
