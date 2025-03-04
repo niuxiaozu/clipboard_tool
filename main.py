@@ -188,13 +188,13 @@ class ClipboardManager:
 
     def open_settings(self, *args):
         """打开设置窗口"""
-        if not self.settings:
+        if not self.settings or not self.settings.winfo_exists():
             self.settings = SettingsWindow(self, self.db)
-        else:
-            # 如果设置窗口已存在，更新其数据
             self.settings.db = self.db
-            self.settings.load_favorites()
+        
+        self.settings.load_favorites()
         self.settings.deiconify()
+        self.settings.lift()
         self.settings.focus_force()
 
     def on_clipboard_changed(self, content):

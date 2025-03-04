@@ -24,6 +24,7 @@ def build_exe():
         '--strip',
         '--noupx',
         '--exclude-module=build',
+        '--exclude-module=PyQt5',
         '--noconfirm'
     ]
     
