@@ -1,4 +1,5 @@
 import os
+from re import error
 import sys
 import time
 import keyboard
@@ -9,7 +10,7 @@ import pystray
 from PIL import Image
 from pywinauto.keyboard import send_keys
 from pywinauto import Application
-import win32com.client,win32api,win32con  
+import win32com.client,win32api,win32con,win32gui
 import io
 import winreg
 from clipboard_db import ClipboardDB
@@ -19,6 +20,9 @@ from settings_window import SettingsWindow
 
 # 输入方式常量
 INPUT_METHOD = "pyautogui"  # 可选值: "pyautogui" 或 "pywinauto" 或 "win32"
+# 定义所需的常量
+WM_WTSSESSION_CHANGE = 0x02B1
+WTS_SESSION_UNLOCK = 0x8
 
 class ClipboardWorker(threading.Thread):
     def __init__(self, callback):
@@ -60,8 +64,10 @@ class ClipboardManager:
 
         self.window.set_item_selected_callback(self.on_item_selected)
         self.window.set_settings_callback(self.open_settings)
+        self.hotkey_id = 1
+        # 添加系统事件监听
+        self.setup_system_event_handler()
         self.init_hotkeys()
-        
         # 初始化剪贴板监控线程
         self.clipboard_worker = ClipboardWorker(self.on_clipboard_changed)
         self.clipboard_worker.start()
@@ -175,8 +181,51 @@ class ClipboardManager:
         except WindowsError:
             pass
         winreg.CloseKey(key)
+
+    def setup_system_event_handler(self):
+        """设置系统事件处理"""
+        # 注册系统事件监听
+        try:
+            import win32ts
+            import win32con
+            import win32gui
+            
+            def wndproc(hwnd, msg, wparam, lparam):
+                print("监听到系统事件",msg,wparam,lparam)
+                if msg == WM_WTSSESSION_CHANGE:
+                    if wparam == WTS_SESSION_UNLOCK:
+                        self.init_hotkeys()
+                elif msg == win32con.WM_HOTKEY:
+                    if wparam == self.hotkey_id:
+                        self.toggle_window()
+                return win32gui.DefWindowProc(hwnd, msg, wparam, lparam)
+            
+            wc = win32gui.WNDCLASS()
+            wc.lpfnWndProc = wndproc
+            wc.lpszClassName = "ClipboardToolEventHandler"
+            win32gui.RegisterClass(wc)
+            self.hwnd = win32gui.CreateWindow(
+                wc.lpszClassName, 
+                "ClipboardTool",
+                0, 0, 0, 0, 0,
+                0, 0, 0, None
+            )
+            win32ts.WTSRegisterSessionNotification(self.hwnd, win32ts.NOTIFY_FOR_THIS_SESSION)
+        except Exception as e:
+            print(f"注册系统事件监听失败: {e}")
+
     def init_hotkeys(self):
-        keyboard.add_hotkey('ctrl+alt+v',  self.toggle_window) 
+        """使用 Windows API 注册全局热键"""
+        print("设置快捷键")
+        try:
+            # 先注销已有的热键
+            win32gui.UnregisterHotKey(self.hwnd, self.hotkey_id)
+        except Exception as e:
+            pass        # 注册新的热键 (MOD_CONTROL | MOD_ALT + V)
+        try:
+            win32gui.RegisterHotKey(self.hwnd, self.hotkey_id, win32con.MOD_CONTROL | win32con.MOD_ALT, ord('V'))
+        except Exception as e:
+            print(f"注册热键失败: {e}")
         
     def toggle_window(self):
         state = self.window.state()
@@ -285,6 +334,10 @@ class ClipboardManager:
 
     def cleanup(self):
         """清理资源并优雅退出"""
+        try:
+            win32gui.UnregisterHotKey(self.hwnd, self.hotkey_id)
+        except:
+            pass
         keyboard.unhook_all()
         if hasattr(self, 'clipboard_worker'):
             self.clipboard_worker.stop()

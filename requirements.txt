@@ -3,5 +3,5 @@ pyautogui==0.9.54
 pyinstaller==6.12.0
 pyperclip==1.8.2
 pystray==0.19.5
-pywin32==306
+pywin32==308
 pywinauto==0.6.9
