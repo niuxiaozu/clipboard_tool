@@ -106,10 +106,7 @@ class ClipboardManager:
             "剪贴板工具",
             menu
         )
-        
-        # 设置左键点击事件
-        self.tray_icon.on_click = self.on_tray_icon_click
-        
+                
         # 在单独的线程中启动托盘图标
         threading.Thread(target=self.tray_icon.run, daemon=True).start()
     
@@ -353,6 +350,7 @@ class ClipboardManager:
         self.stop()
 
 if __name__ == "__main__":
+    manager = None
     try:
         manager = ClipboardManager()
         manager.start()
